@@ -39,13 +39,15 @@ var server = app.listen(3000,  "127.0.0.1", function () {
 app.get('/customer', function (req, res) {
    connection.query('select * from customer', function (error, results, fields) {
 	  if (error) throw error;
+	  res.setHeader('Content-Type', 'application/json');
 	  res.end(JSON.stringify(results));
 	});
 });
 //rest api to get a single customer data
 app.get('/customer/:id', function (req, res) {
-   connection.query('select * from customers where Id=?', [req.params.id], function (error, results, fields) {
+   connection.query('select * from customer where Id=?', [req.params.id], function (error, results, fields) {
 	  if (error) throw error;
+	  res.setHeader('Content-Type', 'application/json');
 	  res.end(JSON.stringify(results));
 	});
 });
@@ -54,9 +56,18 @@ app.get('/customer/:id', function (req, res) {
 app.post('/customer', function (req, res) {
    var params  = req.body;
    console.log(params);
+
    connection.query('INSERT INTO customer SET ?', params, function (error, results, fields) {
-	  if (error) throw error;
-	  res.end(JSON.stringify(results));
+	  if (error) {
+	  	console.info(">" + error);
+	  	res.setHeader('Content-Type', 'application/json');
+	  	//res.end(JSON.stringify(error), 500);
+	  	//res.sendStatus(500);
+	  	res.sendStatus(202).send(JSON.stringify(error));
+	  }else{
+		  res.setHeader('Content-Type', 'application/json');
+		  res.end(JSON.stringify(results));
+	  }
 	});
 });
 
@@ -64,6 +75,7 @@ app.post('/customer', function (req, res) {
 app.put('/customer', function (req, res) {
    connection.query('UPDATE `customer` SET `Name`=?,`Address`=?,`Country`=?,`Phone`=? where `Id`=?', [req.body.Name,req.body.Address, req.body.Country, req.body.Phone, req.body.Id], function (error, results, fields) {
 	  if (error) throw error;
+	  res.setHeader('Content-Type', 'application/json');
 	  res.end(JSON.stringify(results));
 	});
 });
@@ -73,6 +85,7 @@ app.delete('/customer', function (req, res) {
    console.log(req.body);
    connection.query('DELETE FROM `customer` WHERE `Id`=?', [req.body.Id], function (error, results, fields) {
 	  if (error) throw error;
+	  res.setHeader('Content-Type', 'application/json');
 	  res.end('Record has been deleted!');
 	});
 });
