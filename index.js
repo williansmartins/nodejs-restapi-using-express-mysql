@@ -3,12 +3,13 @@ var express = require('express');
 var app = express();
 var mysql      = require('mysql');
 var bodyParser = require('body-parser');
+var url = require('url');
 
 //start mysql connection
 var connection = mysql.createConnection({
   host     : 'localhost', //mysql database host name
   user     : 'root', //mysql database user name
-  password : '', //mysql database password
+  password : 'Imp@ct@', //mysql database password
   database : 'test' //mysql database name
 });
 
@@ -37,15 +38,29 @@ var server = app.listen(3000,  "127.0.0.1", function () {
 
 //rest api to get all customers
 app.get('/customer', function (req, res) {
-   connection.query('select * from customer', function (error, results, fields) {
+   connection.query('select name, address from customer', function (error, results, fields) {
 	  if (error) throw error;
 	  res.setHeader('Content-Type', 'application/json');
 	  res.end(JSON.stringify(results));
 	});
 });
+
+app.get('/*', function (req, res) {
+	var url_parts = url.parse(req.url, true);
+	var query = url_parts.query;
+	var tabela = url_parts.pathname.slice(1);
+	
+	connection.query('select * from ' + tabela, function (error, results, fields) {
+	  if (error) throw error;
+	  res.setHeader('Content-Type', 'application/json');
+	  res.end(JSON.stringify(results));
+	});		
+	
+});
+
 //rest api to get a single customer data
 app.get('/customer/:id', function (req, res) {
-   connection.query('select * from customer where Id=?', [req.params.id], function (error, results, fields) {
+    connection.query('select * from customer where Id=?', [req.params.id], function (error, results, fields) {
 	  if (error) throw error;
 	  res.setHeader('Content-Type', 'application/json');
 	  res.end(JSON.stringify(results));
@@ -60,6 +75,28 @@ app.post('/customer', function (req, res) {
    connection.query('INSERT INTO customer SET ?', params, function (error, results, fields) {
 	  if (error) {
 	  	console.info(">" + error);
+	  	res.setHeader('Content-Type', 'application/json');
+	  	//res.end(JSON.stringify(error), 500);
+	  	//res.sendStatus(500);
+	  	res.sendStatus(202).send(JSON.stringify(error));
+	  }else{
+		  res.setHeader('Content-Type', 'application/json');
+		  res.end(JSON.stringify(results));
+	  }
+	});
+});
+
+app.post('/*', function (req, res) {
+   var params  = req.body;
+   console.log(params);
+   
+   	var url_parts = url.parse(req.url, true);
+	var query = url_parts.query;
+	var tabela = url_parts.pathname.slice(1);
+
+   connection.query('INSERT INTO '+tabela+' SET ?', params, function (error, results, fields) {
+	  if (error) {
+	  	console.info(">>>>>" + error);
 	  	res.setHeader('Content-Type', 'application/json');
 	  	//res.end(JSON.stringify(error), 500);
 	  	//res.sendStatus(500);
